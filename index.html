@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Kiểm Tra Trực Tuyến Môn Toán 12</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- KaTeX CDN for Math Formula Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- Mammoth JS for Word .docx importing support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#102a43',
+                            600: '#0b69a3',
+                            700: '#035388',
+                            800: '#0b2942',
+                            900: '#061b2e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .short-answer-input {
+            width: 45px;
+            height: 52px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .short-answer-input:focus {
+            border-color: #0b69a3;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(11, 105, 163, 0.2);
+        }
+        .pdf-container {
+            width: 100%;
+            height: 75vh;
+            min-height: 500px;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+        }
+        .exam-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 0.85rem;
+        }
+        .exam-table th, .exam-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+            text-align: center;
+        }
+        .exam-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+        .svg-illustration {
+            max-width: 100%;
+            height: auto;
+            margin: 10px auto;
+            display: block;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- App Header -->
+    <header class="bg-navy-800 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-navy-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base md:text-lg tracking-wide">LUYỆN THI TOÁN 12</h1>
+                    <p class="text-[11px] text-slate-300">HỆ THỐNG KIỂM TRA TRỰC TUYẾN CHUẨN THPT QG</p>
+                </div>
+            </div>
+            <!-- Mode Switcher -->
+            <div class="bg-navy-900 p-1 rounded-xl flex text-xs font-semibold">
+                <button id="nav-student-btn" onclick="switchRole('student')" class="px-3 py-1.5 rounded-lg transition-all bg-navy-600 text-white shadow">
+                    Học sinh
+                </button>
+                <button id="nav-teacher-btn" onclick="switchRole('teacher')" class="px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white">
+                    Giáo viên
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-4xl w-full mx-auto p-3 md:p-6">
+        
+        <!-- STUDENT VIEW -->
+        <div id="student-view" class="space-y-4">
+            
+            <!-- Welcome / Student Registration Card -->
+            <div id="student-start-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 text-center space-y-4">
+                <div class="inline-flex p-3 bg-blue-50 text-navy-700 rounded-full text-2xl mb-1">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800" id="current-exam-title">Đề thi Ôn tập Tốt nghiệp THPT môn Toán 12</h2>
+                <p class="text-xs text-slate-500">Thời gian làm bài: 90 phút | Cấu trúc chuẩn 3 Phần | Đầy đủ Hình ảnh & Bảng số liệu</p>
+                
+                <div class="max-w-md mx-auto space-y-3 text-left pt-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Họ và tên học sinh *</label>
+                        <input type="text" id="student-name-input" placeholder="Ví dụ: Nguyễn Văn An" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-navy-600 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Lớp / Trường *</label>
+                        <input type="text" id="student-class-input" placeholder="Ví dụ: 12A4 - THPT Chuyên" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-navy-600 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Chọn đề thi làm bài</label>
+                        <select id="exam-selector" onchange="changeSelectedExam()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-navy-600 focus:outline-none text-sm bg-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-3">
+                    <button onclick="startExam()" class="w-full max-w-md py-3 bg-navy-700 hover:bg-navy-800 text-white font-bold rounded-xl shadow-lg shadow-navy-700/30 transition-all flex items-center justify-center space-x-2 mx-auto">
+                        <span>BẮT ĐẦU LÀM BÀI</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Test Screen -->
+            <div id="student-exam-screen" class="hidden space-y-4">
+                
+                <!-- Fixed Navigation & Timer Header Bar -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 sticky top-16 z-40 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 block" id="exam-tag-name">Đề số 01</span>
+                            <span class="text-xs font-bold text-slate-700" id="progress-text">Đã làm: 0/22 câu</span>
+                        </div>
+                        <div class="flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200 font-mono font-bold text-sm">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="timer-display">90:00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div id="progress-bar-inner" class="bg-navy-600 h-full w-0 transition-all duration-300"></div>
+                    </div>
+
+                    <!-- Exam Part Switcher Tabs -->
+                    <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold text-center">
+                        <button id="tab-btn-part1" onclick="switchExamPart(1)" class="py-2 rounded-lg bg-white text-navy-800 shadow">PHẦN I (MCQ)</button>
+                        <button id="tab-btn-part2" onclick="switchExamPart(2)" class="py-2 rounded-lg text-slate-600">PHẦN II (Đ/S)</button>
+                        <button id="tab-btn-part3" onclick="switchExamPart(3)" class="py-2 rounded-lg text-slate-600">PHẦN III (Điền)</button>
+                    </div>
+                </div>
+
+                <!-- Rendered Question Cards Container -->
+                <div id="questions-area" class="space-y-4 min-h-[400px]">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Bottom Navigation & Submission Toolbar -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-lg flex justify-between items-center">
+                    <div class="flex space-x-2">
+                        <button onclick="navigateQuestion(-1)" class="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50">
+                            <i class="fa-solid fa-chevron-left mr-1"></i> Phần trước
+                        </button>
+                        <button onclick="navigateQuestion(1)" class="px-4 py-2 bg-navy-800 text-white rounded-xl text-sm font-semibold hover:bg-navy-900">
+                            Phần tiếp <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                    <button onclick="confirmSubmitExam()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl shadow-md transition-all">
+                        Nộp bài
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student Result & Detailed PDF Solution Viewer Screen -->
+            <div id="student-result-screen" class="hidden space-y-4">
+                <!-- Score Breakdown Header Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center space-y-3">
+                    <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full text-3xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">KẾT QUẢ BÀI THI</h2>
+                    <p class="text-xs text-slate-500" id="result-student-info">Học sinh: -- | Lớp: --</p>
+
+                    <div class="py-3">
+                        <div class="text-4xl font-extrabold text-navy-700" id="result-score">0.00 / 10</div>
+                        <p class="text-xs text-slate-500 mt-1" id="result-detail-text">Hoàn thành trong -- phút</p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 max-w-sm mx-auto text-xs py-2">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <span class="block text-slate-400">Phần I</span>
+                            <span class="font-bold text-slate-700" id="score-p1">0/3.0</span>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <span class="block text-slate-400">Phần II</span>
+                            <span class="font-bold text-slate-700" id="score-p2">0/4.0</span>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <span class="block text-slate-400">Phần III</span>
+                            <span class="font-bold text-slate-700" id="score-p3">0/3.0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button onclick="togglePdfSolutionView()" class="px-5 py-2.5 bg-navy-700 text-white font-bold rounded-xl text-sm shadow hover:bg-navy-800 transition-all flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-file-pdf text-red-400"></i>
+                            <span>Xem hướng dẫn giải chi tiết (PDF)</span>
+                        </button>
+                        <button onclick="resetToHome()" class="px-5 py-2.5 border border-slate-300 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-50 transition-all">
+                            Trở về trang chủ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Top 5 Leaderboard Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-trophy text-amber-500"></i>
+                            <span>BẢNG XẾP HẠNG TOP 5 HỌC SINH CAO ĐIỂM NHẤT</span>
+                        </h3>
+                        <span class="text-xs text-slate-400">Tự động cập nhật</span>
+                    </div>
+                    <div class="divide-y divide-slate-100" id="top5-leaderboard-list">
+                        <!-- Dynamic Leaderboard Items -->
+                    </div>
+                </div>
+
+                <!-- PDF Embedded Solution View Block -->
+                <div id="pdf-solution-viewer-container" class="hidden space-y-3 pt-2">
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-info text-navy-600 text-base"></i>
+                            <span>File PDF Hướng dẫn giải chi tiết cho đề thi này:</span>
+                        </div>
+                        <a id="pdf-download-link" target="_blank" class="px-3 py-1.5 bg-navy-700 text-white rounded-lg font-semibold hover:bg-navy-800 flex items-center space-x-1">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Tải PDF</span>
+                        </a>
+                    </div>
+
+                    <!-- PDF Viewer -->
+                    <div class="pdf-container bg-slate-900">
+                        <iframe id="pdf-frame" class="w-full h-full border-0" src="about:blank"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEACHER VIEW (ADMIN PANEL) -->
+        <div id="teacher-view" class="hidden space-y-6">
+            
+            <!-- Auth Login Panel -->
+            <div id="teacher-login-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-md mx-auto space-y-4 text-center">
+                <div class="inline-flex p-3 bg-navy-50 text-navy-700 rounded-full text-2xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800">ĐĂNG NHẬP GIÁO VIÊN</h2>
+                <p class="text-xs text-slate-500">Nhập mật khẩu quản trị để tạo/xóa đề thi và gắn file Hướng dẫn giải</p>
+                
+                <div class="text-left space-y-2">
+                    <input type="password" id="teacher-password-input" placeholder="Nhập mật khẩu (Mặc định: admin123)" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-navy-600 text-sm">
+                </div>
+                <button onclick="verifyTeacherLogin()" class="w-full py-2.5 bg-navy-700 text-white font-bold rounded-xl text-sm shadow hover:bg-navy-800">
+                    Đăng nhập hệ thống
+                </button>
+            </div>
+
+            <!-- Teacher Control Panel -->
+            <div id="teacher-panel" class="hidden space-y-6">
+                
+                <!-- Fixed Link Bar for Selected Active Exam -->
+                <div class="bg-gradient-to-r from-navy-800 to-navy-600 text-white rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm tracking-wide flex items-center space-x-2">
+                            <i class="fa-solid fa-link"></i>
+                            <span>ĐƯỜNG LINK CỐ ĐỊNH CHIA SẺ HỌC SINH (ĐỀ ĐANG KÍCH HOẠT)</span>
+                        </h3>
+                        <span class="bg-emerald-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">Đang mở</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="shareable-link-input" readonly class="w-full bg-navy-900/50 text-xs px-3 py-2.5 rounded-xl text-slate-200 outline-none font-mono">
+                        <button onclick="copyShareLink()" class="px-4 py-2.5 bg-white text-navy-800 font-bold text-xs rounded-xl shadow hover:bg-slate-100 flex-shrink-0">
+                            <i class="fa-solid fa-copy mr-1"></i> Sao chép Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1. EXAM DATABASE MANAGER -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3 border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                            <i class="fa-solid fa-folder-open text-navy-600"></i>
+                            <span>1. Quản Lý Danh Sách Đề Thi Cũ (Kích hoạt / Xóa / Sao chép link)</span>
+                        </h3>
+                    </div>
+                    <div class="divide-y divide-slate-100" id="existing-exams-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- 2. ADD & UPDATE NEW EXAM WITH PDF ATTACHMENT -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3 border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                            <i class="fa-solid fa-plus-circle text-emerald-600"></i>
+                            <span>2. Tải Đề Thi Mới & Gắn File PDF Hướng Dẫn Giải Chi Tiết</span>
+                        </h3>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tên đề thi *</label>
+                            <input type="text" id="new-exam-title" placeholder="VD: Đề Ôn Thi Tốt Nghiệp THPT Số 02 - Môn Toán 12" class="w-full px-3.5 py-2.5 border rounded-xl border-slate-300 focus:ring-2 focus:ring-navy-600 outline-none">
+                        </div>
+
+                        <!-- PDF Attachment Upload Zone -->
+                        <div class="p-4 bg-red-50/70 rounded-xl border border-red-200 space-y-2">
+                            <label class="block text-xs font-bold text-red-800 uppercase flex items-center space-x-1">
+                                <i class="fa-solid fa-file-pdf text-red-600"></i>
+                                <span>Gắn File PDF Hướng Dẫn Giải Chi Tiết (Tự động chuyển cho Học Sinh xem sau khi nộp bài)</span>
+                            </label>
+                            <p class="text-[11px] text-slate-500">Hệ thống sẽ gắn file PDF này vào trình xem trực tiếp cho học sinh xem rút kinh nghiệm, không cần can thiệp bóc tách nội dung.</p>
+                            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                                <input type="text" id="pdf-url-input" placeholder="Dán URL / Tên file PDF (Ví dụ: Huong dan giai de on so 2.pdf)" class="w-full px-3 py-2 border rounded-xl text-xs border-slate-300">
+                                <input type="file" id="pdf-file-uploader" accept=".pdf" class="hidden" onchange="handlePdfFileUpload(event)">
+                                <button onclick="document.getElementById('pdf-file-uploader').click()" class="px-4 py-2 bg-white text-red-700 font-semibold border border-red-300 rounded-xl text-xs hover:bg-red-50 shrink-0">
+                                    <i class="fa-solid fa-upload mr-1"></i> Chọn File PDF từ máy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Word DOCX File Import Tool -->
+                        <div class="p-4 bg-blue-50/70 rounded-xl border border-blue-200 space-y-2">
+                            <label class="block text-xs font-bold text-navy-800 uppercase flex items-center space-x-1">
+                                <i class="fa-solid fa-file-word text-blue-600"></i>
+                                <span>Nạp nhanh từ File Word (.docx) hoặc dán cấu trúc JSON đề thi</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" id="word-file-uploader" accept=".docx" class="hidden" onchange="handleWordFileUpload(event)">
+                                <button onclick="document.getElementById('word-file-uploader').click()" class="px-4 py-2 bg-navy-700 text-white font-semibold rounded-xl text-xs hover:bg-navy-800">
+                                    <i class="fa-solid fa-file-import mr-1"></i> Tải Đề Thi Từ File Word (.docx)
+                                </button>
+                                <span class="text-xs text-slate-500" id="word-filename-display"></span>
+                            </div>
+                        </div>
+
+                        <!-- JSON Raw Structure Input -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cấu trúc đề thi chi tiết (JSON / HTML tables / SVG visual / KaTeX math)</label>
+                            <textarea id="raw-json-input" rows="8" placeholder="Nhập cấu trúc dữ liệu đề..." class="w-full p-3 font-mono text-xs border rounded-xl border-slate-300 focus:ring-2 focus:ring-navy-600 outline-none"></textarea>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 pt-1">
+                            <button onclick="saveNewExam()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow">
+                                <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu & Kích Hoạt Đề Thi Mới
+                            </button>
+                            <button onclick="loadExam2Template()" class="px-4 py-2.5 bg-blue-50 text-navy-700 font-bold border border-blue-200 rounded-xl text-xs hover:bg-blue-100">
+                                <i class="fa-solid fa-file-circle-check mr-1"></i> Nạp Mẫu Đề Ôn Số 02 Sẵn Có
+                            </button>
+                            <button onclick="clearForm()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs">
+                                Làm mới Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Results Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                            <i class="fa-solid fa-users text-navy-600"></i>
+                            <span>Bảng Điểm Kết Quả Học Sinh Nộp Bài</span>
+                        </h3>
+                        <button onclick="clearAllResults()" class="text-xs text-rose-600 hover:underline font-semibold">Xóa toàn bộ điểm số</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 uppercase text-[10px] text-slate-400">
+                                <tr>
+                                    <th class="p-2.5">Họ tên học sinh</th>
+                                    <th class="p-2.5">Lớp</th>
+                                    <th class="p-2.5">Tên Đề thi</th>
+                                    <th class="p-2.5 text-center">Điểm số</th>
+                                    <th class="p-2.5 text-center">Thời gian</th>
+                                    <th class="p-2.5 text-right">Nộp lúc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-results-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Dialog Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 text-center">
+            <div id="modal-icon" class="text-3xl text-navy-700">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h4 id="modal-title" class="font-bold text-slate-800 text-base">Thông báo</h4>
+            <p id="modal-message" class="text-xs text-slate-600 leading-relaxed"></p>
+            <div class="flex justify-center space-x-2 pt-2" id="modal-buttons">
+                <button onclick="closeModal()" class="px-5 py-2 bg-navy-700 text-white font-bold rounded-xl text-xs">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        // INLINE SVG GRAPHICS UTILITY FOR EXAMS
+        const SVG_ASSETS = {
+            hyperloop: `<svg class="svg-illustration" viewBox="0 0 500 160" width="100%"><rect width="500" height="160" fill="#f8fafc" rx="8"/><line x1="30" y1="110" x2="470" y2="110" stroke="#94a3b8" stroke-width="6" stroke-dasharray="10 5"/><rect x="180" y="85" width="120" height="40" rx="15" fill="#0b69a3" stroke="#035388" stroke-width="3"/><circle cx="210" cy="105" r="8" fill="#e0f2fe"/><circle cx="270" cy="105" r="8" fill="#e0f2fe"/><path d="M 50 110 L 450 110" stroke="#38bdf8" stroke-width="2"/><text x="240" y="50" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">Sơ đồ mô phỏngCabin Hyperloop chuyển động trên cáp</text></svg>`,
+            workerEfficiency: `<svg class="svg-illustration" viewBox="0 0 450 200" width="100%"><rect width="450" height="200" fill="#fafafa" rx="8"/><line x1="50" y1="170" x2="400" y2="170" stroke="#475569" stroke-width="2"/><line x1="50" y1="170" x2="50" y2="20" stroke="#475569" stroke-width="2"/><path d="M 50 40 Q 200 60 300 130 T 380 160" fill="none" stroke="#2563eb" stroke-width="3"/><path d="M 50 70 Q 220 90 300 130 T 380 140" fill="none" stroke="#dc2626" stroke-width="3" stroke-dasharray="4 2"/><text x="390" y="165" font-size="11" fill="#475569">t(h)</text><text x="35" y="25" font-size="11" fill="#475569">Q'(t)</text><text x="310" y="125" font-size="11" font-weight="bold" fill="#2563eb">t = 5h</text><line x1="300" y1="130" x2="300" y2="170" stroke="#94a3b8" stroke-dasharray="2 2"/><text x="220" y="15" font-size="11" font-weight="bold" fill="#0f172a">Đồ thị hiệu suất làm việc Q'_1(t) và Q'_2(t)</text></svg>`,
+            networkGraph: `<svg class="svg-illustration" viewBox="0 0 450 220" width="100%"><rect width="450" height="220" fill="#f8fafc" rx="8"/><line x1="60" y1="110" x2="140" y2="40" stroke="#64748b" stroke-width="2"/><line x1="60" y1="110" x2="140" y2="180" stroke="#64748b" stroke-width="2"/><line x1="140" y1="40" x2="140" y2="180" stroke="#64748b" stroke-width="2"/><line x1="140" y1="40" x2="310" y2="40" stroke="#64748b" stroke-width="2"/><line x1="140" y1="180" x2="310" y2="40" stroke="#64748b" stroke-width="2"/><line x1="140" y1="180" x2="310" y2="180" stroke="#64748b" stroke-width="2"/><line x1="310" y1="40" x2="310" y2="180" stroke="#64748b" stroke-width="2"/><line x1="310" y1="40" x2="390" y2="110" stroke="#64748b" stroke-width="2"/><line x1="310" y1="180" x2="390" y2="110" stroke="#64748b" stroke-width="2"/><circle cx="60" cy="110" r="16" fill="#0b69a3"/><text x="60" y="114" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">A</text><circle cx="140" cy="40" r="16" fill="#0b69a3"/><text x="140" y="44" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">B</text><circle cx="310" cy="40" r="16" fill="#0b69a3"/><text x="310" y="44" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">C</text><circle cx="390" cy="110" r="16" fill="#0b69a3"/><text x="390" y="114" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">D</text><circle cx="310" cy="180" r="16" fill="#0b69a3"/><text x="310" y="184" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">E</text><circle cx="140" cy="180" r="16" fill="#0b69a3"/><text x="140" y="184" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">F</text><text x="95" y="65" font-size="11" font-weight="bold" fill="#0284c7">3</text><text x="95" y="155" font-size="11" font-weight="bold" fill="#0284c7">4</text><text x="130" y="115" font-size="11" font-weight="bold" fill="#0284c7">8</text><text x="225" y="32" font-size="11" font-weight="bold" fill="#0284c7">5</text><text x="215" y="105" font-size="11" font-weight="bold" fill="#0284c7">14</text><text x="225" y="195" font-size="11" font-weight="bold" fill="#0284c7">6</text><text x="320" y="115" font-size="11" font-weight="bold" fill="#0284c7">10</text><text x="355" y="65" font-size="11" font-weight="bold" fill="#0284c7">5</text><text x="355" y="155" font-size="11" font-weight="bold" fill="#0284c7">9</text></svg>`,
+            curvedBridge: `<svg class="svg-illustration" viewBox="0 0 450 170" width="100%"><rect width="450" height="170" fill="#f1f5f9" rx="8"/><path d="M 40 140 C 120 20, 220 20, 300 90 C 350 130, 380 140, 410 140" fill="none" stroke="#0284c7" stroke-width="4"/><line x1="30" y1="140" x2="420" y2="140" stroke="#475569" stroke-width="2"/><text x="40" y="158" font-size="11" font-weight="bold" fill="#0f172a">A(-1200; 0)</text><text x="410" y="158" font-size="11" font-weight="bold" fill="#0f172a">B(660; 0)</text><text x="170" y="30" font-size="11" font-weight="bold" fill="#2563eb">Đỉnh cầu 200ft tại x=0</text></svg>`,
+            helicopterGrid: `<svg class="svg-illustration" viewBox="0 0 450 180" width="100%"><rect width="450" height="180" fill="#0f172a" rx="8"/><rect x="180" y="50" width="90" height="110" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/><circle cx="225" cy="40" r="25" fill="none" stroke="#e0f2fe" stroke-dasharray="3 3"/><line x1="70" y1="30" x2="225" y2="40" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 2"/><circle cx="70" cy="30" r="5" fill="#ef4444"/><text x="60" y="20" font-size="11" font-weight="bold" fill="#fca5a5">Sân bay A</text><text x="225" y="175" font-size="11" font-weight="bold" fill="#93c5fd" text-anchor="middle">Tòa nhà chọc trời Oxyz</text></svg>`,
+            asymptoteGraph: `<svg class="svg-illustration" viewBox="0 0 400 180" width="100%"><rect width="400" height="180" fill="#ffffff" rx="8"/><line x1="20" y1="130" x2="380" y2="130" stroke="#64748b" stroke-width="1.5"/><line x1="160" y1="10" x2="160" y2="170" stroke="#64748b" stroke-width="1.5"/><line x1="20" y1="70" x2="380" y2="70" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 4"/><line x1="110" y1="10" x2="110" y2="170" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 4"/><path d="M 20 50 Q 90 60 100 160" fill="none" stroke="#16a34a" stroke-width="2.5"/><path d="M 120 10 Q 130 80 380 90" fill="none" stroke="#16a34a" stroke-width="2.5"/><text x="360" y="62" font-size="11" font-weight="bold" fill="#ef4444">y = 2</text><text x="115" y="25" font-size="11" font-weight="bold" fill="#ef4444">x = -1</text><text x="168" y="145" font-size="11" font-weight="bold" fill="#0f172a">O</text></svg>`
+        };
+
+        // EXAM DATA #1
+        const EXAM_DE_SO_1 = {
+            id: "de_so_01",
+            title: "Đề Ôn Thi Tốt Nghiệp THPT Số 01 - Môn Toán 12",
+            timeLimitMinutes: 90,
+            pdfSolutionUrl: "Huong dan giai.pdf",
+            part1: [
+                { id: "p1_q1", question: "Cho cấp số nhân $(u_n)$ với $u_1 = 3$ và công bội $q = 2$. Giá trị của $u_2$ bằng", options: ["A. 8", "B. 6", "C. 5", "D. 9"], correctIndex: 1 },
+                { id: "p1_q2", question: "Trong mặt phẳng $Oxy$, thể tích $V$ của khối tròn xoay được tạo ra khi quay hình phẳng giới hạn bởi đồ thị $y = f(x)$, trục $Ox$ và hai đường thẳng $x = a, x = b$ quanh trục $Ox$ là", options: ["A. $V = \\pi \\int_{a}^{b} f(x) dx$", "B. $V = \\pi \\int_{a}^{b} [f(x)]^2 dx$", "C. $V = \\int_{a}^{b} [f(x)]^2 dx$", "D. $V = \\pi^2 \\int_{a}^{b} [f(x)]^2 dx$"], correctIndex: 1 },
+                { id: "p1_q3", question: "Cho khối lăng trụ đứng $ABC.A'B'C'$ có tam giác $ABC$ vuông tại $A$: $AB = a, AC = a\\sqrt{3}$ và $AA' = 2a$. Thể tích khối lăng trụ bằng", options: ["A. $a^3\\sqrt{3}$", "B. $\\frac{a^3\\sqrt{3}}{3}$", "C. $2a^3\\sqrt{3}$", "D. $\\frac{2a^3\\sqrt{3}}{3}$"], correctIndex: 0 },
+                { id: "p1_q4", question: "Trong không gian $Oxyz$, cho đường thẳng $d: \\frac{x-1}{2} = \\frac{y+2}{-1} = \\frac{z}{3}$. Vectơ nào sau đây là một vectơ chỉ phương của $d$?", options: ["A. $(1; -2; 0)$", "B. $(-1; 2; 0)$", "C. $(2; 1; 3)$", "D. $(2; -1; 3)$"], correctIndex: 3 },
+                { id: "p1_q5", question: "Cho tứ diện $ABCD$. Mệnh đề nào dưới đây là đúng?", options: ["A. $\\vec{AB} + \\vec{BC} = \\vec{CA}$", "B. $\\vec{AB} - \\vec{AC} = \\vec{BC}$", "C. $\\vec{AB} + \\vec{BC} + \\vec{CD} = \\vec{AD}$", "D. $\\vec{AB} + \\vec{CD} = \\vec{AC} + \\vec{DB}$"], correctIndex: 2 },
+                { 
+                    id: "p1_q6", 
+                    question: `Thời gian đọc sách của 40 học sinh lớp 12A1 trong một ngày được thống kê theo bảng ghép nhóm dưới đây. Tính tứ phân vị thứ ba $Q_3$:
+                    <table class="exam-table">
+                        <tr><th>Thời gian (phút)</th><td>[0; 20)</td><td>[20; 40)</td><td>[40; 60)</td><td>[60; 80)</td><td>[80; 100)</td></tr>
+                        <tr><th>Tần số (số HS)</th><td>4</td><td>8</td><td>14</td><td>12</td><td>2</td></tr>
+                    </table>`, 
+                    options: ["A. 65,5", "B. 72,5", "C. 70,0", "D. 68,0"], 
+                    correctIndex: 1 
+                },
+                { id: "p1_q7", question: "Nghiệm của phương trình $\\log_2(x - 1) = 3$ là", options: ["A. $x = 7$", "B. $x = 8$", "C. $x = 9$", "D. $x = 10$"], correctIndex: 2 },
+                { 
+                    id: "p1_q8", 
+                    question: `Cho hàm số $y = f(x)$ có đồ thị như hình vẽ dưới đây. Đường tiệm cận ngang của đồ thị hàm số có phương trình là:
+                    ${SVG_ASSETS.asymptoteGraph}`, 
+                    options: ["A. $x = -1$", "B. $y = -1$", "C. $y = 2$", "D. $x = 2$"], 
+                    correctIndex: 2 
+                },
+                { id: "p1_q9", question: "Tập nghiệm của bất phương trình $3^{x-1} > 9$ là", options: ["A. $(2; +\\infty)$", "B. $(-\\infty; 3)$", "C. $(1; +\\infty)$", "D. $(3; +\\infty)$"], correctIndex: 3 },
+                { id: "p1_q10", question: "Cho hình lăng trụ $ABC.A'B'C'$. Đường thẳng $BB'$ song song với mặt phẳng nào sau đây?", options: ["A. $(ABC)$", "B. $(A'B'C')$", "C. $(ACC'A')$", "D. $(AA'B')$"], correctIndex: 2 },
+                { id: "p1_q11", question: "Trong không gian $Oxyz$, mặt phẳng đi qua gốc tọa độ $O$ và nhận $\\vec{n} = (1; -2; 3)$ làm vectơ pháp tuyến có phương trình là", options: ["A. $x + 2y + 3z = 0$", "B. $x - 2y + 3z = 0$", "C. $x - 2y - 3z = 0$", "D. $x + 2y - 3z = 0$"], correctIndex: 1 },
+                { id: "p1_q12", question: "Họ nguyên hàm của hàm số $f(x) = \\cos 2x$ là", options: ["A. $-\\frac{1}{2}\\sin 2x + C$", "B. $2\\sin 2x + C$", "C. $\\frac{1}{2}\\sin 2x + C$", "D. $-\\sin 2x + C$"], correctIndex: 2 }
+            ],
+            part2: [
+                { id: "p2_q1", question: "Cho hàm số $y = x^3 - 3x^2 + 2$. Xét tính đúng/sai của các phát biểu sau:", items: [{ text: "a) Hàm số nghịch biến trên khoảng (0; 2).", correct: true }, { text: "b) Đồ thị hàm số có hai điểm cực trị.", correct: true }, { text: "c) Giá trị cực đại của hàm số bằng 2.", correct: true }, { text: "d) Giá trị nhỏ nhất của hàm số trên đoạn [-1; 3] bằng -3.", correct: false }] },
+                { 
+                    id: "p2_q2", 
+                    question: `Dự án Hyperloop: Một cabin xuất phát từ $A(1; 2; 3)$ chuyển động theo đường cáp có VTCP $\\vec{u}=(2; -1; 2)$ với tốc độ $v = 15$ m/s.
+                    ${SVG_ASSETS.hyperloop}`, 
+                    items: [
+                        { text: "a) Phương trình tham số của đường cáp là x=1+2t, y=2-t, z=3+2t.", correct: true }, 
+                        { text: "b) Sau t=2 giây kể từ khi xuất phát cabin đến M(11; -3; 13).", correct: true }, 
+                        { text: "c) Cabin dừng ở điểm N có x_N = 7 thì quãng đường AN = 10m.", correct: false }, 
+                        { text: "d) Đường cáp tạo với mặt phẳng (Oxy) một góc 45 độ.", correct: false }
+                    ] 
+                },
+                { id: "p2_q3", question: "Trong xét nghiệm RT-PCR: Tỉ lệ dương tính giả là 2%, âm tính giả là 1%, tỉ lệ mắc bệnh là 5%.", items: [{ text: "a) Xác suất dương tính thật bằng 99%.", correct: true }, { text: "b) Xác suất xét nghiệm RT-PCR có kết quả dương tính là 6,85%.", correct: true }, { text: "c) Xác suất người nhiễm virus trong những người dương tính > 75%.", correct: false }, { text: "d) Xác suất người không nhiễm virus trong những người âm tính < 95%.", correct: false }] },
+                { 
+                    id: "p2_q4", 
+                    question: `Đồ thị biểu diễn hiệu suất làm việc $Q'_1(t)$ và $Q'_2(t)$ của hai công nhân A và B trong 6 giờ:
+                    ${SVG_ASSETS.workerEfficiency}`, 
+                    items: [
+                        { text: "a) Hiệu suất cực đại của công nhân A cao hơn công nhân B.", correct: true }, 
+                        { text: "b) Phần diện tích gạch sọc biểu diễn tổng số sản phẩm 2 người làm trong 6h.", correct: false }, 
+                        { text: "c) Sau 5h số lượng sản phẩm công nhân A làm nhiều hơn công nhân B.", correct: false }, 
+                        { text: "d) Sau 5h hiệu suất của công nhân A bằng hiệu suất công nhân B.", correct: true }
+                    ] 
+                }
+            ],
+            part3: [
+                { id: "p3_q1", question: "Cho hình chóp $S.ABCD$ có đáy $ABCD$ là hình vuông cạnh $a=1$, $SA \\perp (ABCD)$ và $SA = \\sqrt{2}$. Gọi $M$ là trung điểm $SB$. Tính khoảng cách giữa $AB$ và $SC$ (làm tròn đến hàng phần trăm).", correctAnswer: "0,82" },
+                { 
+                    id: "p3_q2", 
+                    question: `Sơ đồ 6 địa điểm A, B, C, D, E, F nối với nhau bằng các đường giao hàng (km). Người giao hàng xuất phát từ 1 điểm, đi qua 5 điểm còn lại đúng 1 lần và quay về điểm ban đầu. Quãng đường ngắn nhất (km) là bao nhiêu?
+                    ${SVG_ASSETS.networkGraph}`, 
+                    correctAnswer: "32" 
+                },
+                { 
+                    id: "p3_q3", 
+                    question: `Mô phỏng cây cầu cong bậc ba qua điểm A(-1200; 0) và B(660; 0), đỉnh giữa x=0 có độ cao 200 feet. Tính tổng chi phí xây dựng (triệu USD) với đơn giá 100 USD/feet vuông surface.
+                    ${SVG_ASSETS.curvedBridge}`, 
+                    correctAnswer: "37,6" 
+                },
+                { 
+                    id: "p3_q4", 
+                    question: `Trực thăng cứu hộ bay tới đỉnh tòa nhà. Đường bay tối ưu tìm điểm M trên đường bay để khoảng cách tới N ngắn nhất. Tính tọa độ cao $z_M$?
+                    ${SVG_ASSETS.helicopterGrid}`, 
+                    correctAnswer: "100" 
+                },
+                { id: "p3_q5", question: "Bài toán tối ưu nhân viên tăng ca của nhà hàng. Xác định số nhân viên tăng ca cần có để lợi nhuận của nhà hàng đạt lớn nhất.", correctAnswer: "25" },
+                { id: "p3_q6", question: "Truyền máu thành công hệ ABO Việt Nam. Xác suất người nhận thuộc nhóm máu B thành công là bao nhiêu %? (Làm tròn đến hàng đơn vị).", correctAnswer: "37" }
+            ]
+        };
+
+        // EXAM DATA #2
+        const EXAM_DE_SO_2 = {
+            id: "de_so_02",
+            title: "Đề Ôn Thi Tốt Nghiệp THPT Số 02 - Môn Toán 12",
+            timeLimitMinutes: 90,
+            pdfSolutionUrl: "Huong dan giai de on so 2.pdf",
+            part1: [
+                { id: "p1_q1", question: "Cho hàm số $y = f(x)$ có bảng biến thiên trên $[0; 3]$. Giá trị lớn nhất của $f(x)$ trên $[0; 3]$ bằng", options: ["A. 5", "B. 2", "C. -1", "D. 0"], correctIndex: 0 },
+                { id: "p1_q2", question: "Trong không gian $Oxyz$, cho mặt cầu $(S): (x-1)^2 + (y+2)^2 + (z-3)^2 = 16$. Bán kính $R$ bằng", options: ["A. 16", "B. 4", "C. 8", "D. 2"], correctIndex: 1 },
+                { id: "p1_q3", question: "Cho hàm số $y = a^x$ ($0 < a \\neq 1$). Mệnh đề nào sau đây là SAI?", options: ["A. Tập xác định $\\mathbb{R}$", "B. Hàm số luôn đồng biến", "C. Tập giá trị $(0; +\\infty)$", "D. Đồ thị qua $(0; 1)$"], correctIndex: 1 },
+                { id: "p1_q4", question: "Đường tiệm cận đứng của đồ thị hàm số $y = \\frac{x-2}{x+1}$ có phương trình là", options: ["A. $x = 1$", "B. $y = 1$", "C. $x = -1$", "D. $y = -1$"], correctIndex: 2 },
+                { id: "p1_q5", question: "Tính tích phân $I = \\int_{0}^{1} e^{2x} dx$ bằng", options: ["A. $\\frac{e^2 - 1}{2}$", "B. $e^2 - 1$", "C. $2(e^2 - 1)$", "D. $\\frac{e^2 + 1}{2}$"], correctIndex: 0 },
+                { id: "p1_q6", question: "Cho khối nón có bán kính đáy $r = 3$ và chiều cao $h = 4$. Thể tích khối nón bằng", options: ["A. $36\\pi$", "B. $12\\pi$", "C. $24\\pi$", "D. $48\\pi$"], correctIndex: 1 },
+                { id: "p1_q7", question: "Tập xác định của hàm số $y = (x - 2)^{-3}$ là", options: ["A. $\\mathbb{R}$", "B. $(2; +\\infty)$", "C. $\\mathbb{R} \\setminus \\{2\\}$", "D. $[2; +\\infty)$"], correctIndex: 2 },
+                { id: "p1_q8", question: "Trong không gian $Oxyz$, góc giữa hai mặt phẳng $(P): x + y = 0$ và $(Q): y + z = 0$ bằng", options: ["A. $30^\\circ$", "B. $45^\\circ$", "C. $60^\\circ$", "D. $90^\\circ$"], correctIndex: 2 },
+                { id: "p1_q9", question: "Cho mẫu ghép nhóm có khoảng biến thiên $R = 40$. Chia 5 nhóm đều nhau. Độ rộng mỗi nhóm là", options: ["A. 8", "B. 5", "C. 10", "D. 4"], correctIndex: 0 },
+                { id: "p1_q10", question: "Nghiệm của bất phương trình $\\log_{0,5}(x+1) > -1$ là", options: ["A. $x < 1$", "B. $-1 < x < 1$", "C. $x > 1$", "D. $x > -1$"], correctIndex: 1 },
+                { id: "p1_q11", question: "Hình đa diện nào có tất cả các mặt là tam giác đều?", options: ["A. Tứ diện đều", "B. Lập phương", "C. Lăng trụ tam giác đều", "D. Hình hộp"], correctIndex: 0 },
+                { id: "p1_q12", question: "Cho biến ngẫu nhiên $X$ có kỳ vọng $E(X) = 4$. Tính $E(2X + 3)$", options: ["A. 11", "B. 8", "C. 14", "D. 10"], correctIndex: 0 }
+            ],
+            part2: [
+                { id: "p2_q1", question: "Cho hàm số $y = \\frac{x^2 - x + 1}{x - 1}$. Xét tính đúng/sai:", items: [{ text: "a) Hàm số đạt cực đại tại x = 0.", correct: true }, { text: "b) Tiệm cận xiên là đường thẳng y = x.", correct: true }, { text: "c) Giá trị cực tiểu y_CT = 3.", correct: true }, { text: "d) Đồ thị hàm số cắt trục tung tại (0; 1).", correct: false }] },
+                { id: "p2_q2", question: "Trong $Oxyz$, cho mặt phẳng $(P): 2x - y + 2z - 6 = 0$. Xét đúng/sai:", items: [{ text: "a) Vectơ n=(2; -1; 2) là VTPT.", correct: true }, { text: "b) Khoảng cách từ O đến (P) bằng 2.", correct: true }, { text: "c) Điểm A(1; 2; 3) thuộc (P).", correct: false }, { text: "d) Mặt phẳng (Q) // (P) qua O có pt 2x-y+2z=0.", correct: true }] },
+                { id: "p2_q3", question: "Gieo đồng thời 2 con súc sắc cân đối đồng chất. Xét đúng/sai:", items: [{ text: "a) Không gian mẫu gồm 36 phần tử.", correct: true }, { text: "b) Xác suất tổng số chấm bằng 7 là 1/6.", correct: true }, { text: "c) Xác suất 2 súc sắc xuất hiện mặt cùng chấm là 1/12.", correct: false }, { text: "d) Xác suất tổng chấm > 10 là 1/12.", correct: true }] },
+                { id: "p2_q4", question: "Cho hình chóp $S.ABC$ có đáy $ABC$ vuông cân tại $B$, $SA \\perp (ABC)$. Xét đúng/sai:", items: [{ text: "a) BC vuông góc mặt phẳng (SAB).", correct: true }, { text: "b) Góc giữa SC và (ABC) là góc SCA.", correct: true }, { text: "c) Tam giác SBC là tam giác vuông tại B.", correct: true }, { text: "d) Mặt phẳng (SBC) vuông góc (SAC).", correct: false }] }
+            ],
+            part3: [
+                { id: "p3_q1", question: "Tính diện tích hình phẳng giới hạn bởi $y = x^2$ và $y = 2x$.", correctAnswer: "1,33" },
+                { id: "p3_q2", question: "Khoảng cách từ $M(1, 2, 3)$ đến mặt phẳng $x + 2y - 2z + 1 = 0$ bằng bao nhiêu?", correctAnswer: "0" },
+                { id: "p3_q3", question: "Giá trị nhỏ nhất của $f(x) = x + \\frac{4}{x}$ trên $(0; +\\infty)$ bằng", correctAnswer: "4" },
+                { id: "p3_q4", question: "Bán kính $r = 5$ cm, diện tích xung quanh $100\\pi$ $\\text{cm}^2$. Chiều cao $h$ (cm)?", correctAnswer: "10" },
+                { id: "p3_q5", question: "Tổng các nghiệm của phương trình $4^x - 3\\cdot 2^x + 2 = 0$ bằng", correctAnswer: "1" },
+                { id: "p3_q6", question: "Bắn 2 viên độc lập xác suất 0.8. Xác suất ít nhất 1 viên trúng là bao nhiêu %?", correctAnswer: "96" }
+            ]
+        };
+
+        // APPLICATION STATE VARIABLES
+        let currentRole = 'student';
+        let examsDatabase = [];
+        let currentExam = null;
+        let activePart = 1;
+        let studentAnswers = { part1: {}, part2: {}, part3: {} };
+        let examTimerInterval = null;
+        let secondsRemaining = 5400; // 90 mins
+        let currentStudentInfo = { name: '', className: '' };
+        let studentResultsDB = [];
+
+        // ON LOAD INITIALIZATION
+        window.onload = function() {
+            loadDatabaseFromStorage();
+            if (examsDatabase.length === 0) {
+                examsDatabase.push(EXAM_DE_SO_1);
+                examsDatabase.push(EXAM_DE_SO_2);
+                saveDatabaseToStorage();
+            }
+
+            // Bind exam ID from URL params if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetExamId = urlParams.get('examId');
+            if (targetExamId) {
+                const found = examsDatabase.find(e => e.id === targetExamId);
+                if (found) currentExam = found;
+                else currentExam = examsDatabase[0];
+            } else {
+                currentExam = examsDatabase[0];
+            }
+
+            renderExamSelector();
+            renderTeacherExamsList();
+            renderTeacherResultsTable();
+            updateShareLink();
+            renderMath();
+        };
+
+        function loadDatabaseFromStorage() {
+            const savedExams = localStorage.getItem('math12_exams_v4');
+            if (savedExams) {
+                try { examsDatabase = JSON.parse(savedExams); } catch(e) { examsDatabase = []; }
+            }
+            const savedResults = localStorage.getItem('math12_results_v4');
+            if (savedResults) {
+                try { studentResultsDB = JSON.parse(savedResults); } catch(e) { studentResultsDB = []; }
+            }
+        }
+
+        function saveDatabaseToStorage() {
+            localStorage.setItem('math12_exams_v4', JSON.stringify(examsDatabase));
+            localStorage.setItem('math12_results_v4', JSON.stringify(studentResultsDB));
+        }
+
+        // ROLE SWITCHING
+        function switchRole(role) {
+            currentRole = role;
+            const studentBtn = document.getElementById('nav-student-btn');
+            const teacherBtn = document.getElementById('nav-teacher-btn');
+            const studentView = document.getElementById('student-view');
+            const teacherView = document.getElementById('teacher-view');
+
+            if (role === 'student') {
+                studentBtn.className = "px-3 py-1.5 rounded-lg transition-all bg-navy-600 text-white shadow";
+                teacherBtn.className = "px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white";
+                studentView.classList.remove('hidden');
+                teacherView.classList.add('hidden');
+            } else {
+                teacherBtn.className = "px-3 py-1.5 rounded-lg transition-all bg-navy-600 text-white shadow";
+                studentBtn.className = "px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white";
+                teacherView.classList.remove('hidden');
+                studentView.classList.add('hidden');
+            }
+        }
+
+        // EXAM SELECTOR & LINK GENERATOR
+        function renderExamSelector() {
+            const select = document.getElementById('exam-selector');
+            select.innerHTML = '';
+            examsDatabase.forEach((ex) => {
+                const opt = document.createElement('option');
+                opt.value = ex.id;
+                opt.textContent = ex.title;
+                if (ex.id === currentExam.id) opt.selected = true;
+                select.appendChild(opt);
+            });
+            document.getElementById('current-exam-title').innerText = currentExam.title;
+            updateShareLink();
+        }
+
+        function changeSelectedExam() {
+            const selectedId = document.getElementById('exam-selector').value;
+            currentExam = examsDatabase.find(e => e.id === selectedId) || examsDatabase[0];
+            document.getElementById('current-exam-title').innerText = currentExam.title;
+            updateShareLink();
+        }
+
+        function updateShareLink() {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const fullLink = `${baseUrl}?examId=${currentExam.id}`;
+            document.getElementById('shareable-link-input').value = fullLink;
+        }
+
+        function copyShareLink() {
+            const linkInput = document.getElementById('shareable-link-input');
+            linkInput.select();
+            document.execCommand('copy');
+            showModal('Đã sao chép link!', 'Đã chép đường liên kết làm bài cố định. Bạn có thể gửi trực tiếp cho học sinh.');
+        }
+
+        // STUDENT FLOW
+        function startExam() {
+            const name = document.getElementById('student-name-input').value.trim();
+            const className = document.getElementById('student-class-input').value.trim();
+
+            if (!name || !className) {
+                showModal('Thiếu thông tin', 'Vui lòng nhập đầy đủ Họ tên và Lớp của học sinh trước khi bắt đầu.');
+                return;
+            }
+
+            currentStudentInfo = { name, className };
+            studentAnswers = { part1: {}, part2: {}, part3: {} };
+            
+            document.getElementById('student-start-card').classList.add('hidden');
+            document.getElementById('student-exam-screen').classList.remove('hidden');
+            document.getElementById('exam-tag-name').innerText = currentExam.title;
+
+            // Start 90 mins Timer
+            secondsRemaining = (currentExam.timeLimitMinutes || 90) * 60;
+            clearInterval(examTimerInterval);
+            examTimerInterval = setInterval(updateTimerDisplay, 1000);
+
+            activePart = 1;
+            renderCurrentPart();
+            updateProgress();
+        }
+
+        function updateTimerDisplay() {
+            secondsRemaining--;
+            if (secondsRemaining <= 0) {
+                clearInterval(examTimerInterval);
+                showModal('Hết giờ!', 'Thời gian làm bài đã kết thúc. Hệ thống tự động nộp bài của bạn.');
+                submitExam();
+                return;
+            }
+            const mins = Math.floor(secondsRemaining / 60);
+            const secs = secondsRemaining % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function switchExamPart(partNum) {
+            activePart = partNum;
+            [1, 2, 3].forEach(p => {
+                const btn = document.getElementById(`tab-btn-part${p}`);
+                if (p === partNum) {
+                    btn.className = "py-2 rounded-lg bg-white text-navy-800 shadow font-bold";
+                } else {
+                    btn.className = "py-2 rounded-lg text-slate-600";
+                }
+            });
+            renderCurrentPart();
+        }
+
+        function renderCurrentPart() {
+            const container = document.getElementById('questions-area');
+            container.innerHTML = '';
+
+            if (activePart === 1) {
+                currentExam.part1.forEach((q, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4";
+                    
+                    let optionsHtml = q.options.map((opt, oIdx) => {
+                        const isSelected = studentAnswers.part1[q.id] === oIdx;
+                        return `
+                            <button onclick="selectPart1Answer('${q.id}', ${oIdx})" 
+                                class="w-full text-left p-3.5 rounded-xl border text-sm transition-all flex items-center space-x-3 ${isSelected ? 'border-navy-600 bg-navy-50 text-navy-800 font-semibold shadow-sm' : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'}">
+                                <div class="w-6 h-6 rounded-full border flex items-center justify-center text-xs shrink-0 ${isSelected ? 'border-navy-600 bg-navy-600 text-white font-bold' : 'border-slate-300 text-slate-400'}">
+                                    ${String.fromCharCode(65 + oIdx)}
+                                </div>
+                                <span class="flex-grow">${opt.replace(/^[A-D]\.\s*/, '')}</span>
+                            </button>
+                        `;
+                    }).join('');
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="bg-navy-100 text-navy-800 text-xs font-bold px-2.5 py-1 rounded-lg">Câu ${idx + 1} (Phần I - Trắc nghiệm 4 phương án)</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 leading-relaxed">${q.question}</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">${optionsHtml}</div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } else if (activePart === 2) {
+                currentExam.part2.forEach((q, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4";
+                    
+                    let itemsHtml = q.items.map((item, iIdx) => {
+                        const userVal = studentAnswers.part2[`${q.id}_${iIdx}`];
+                        return `
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="text-xs sm:text-sm text-slate-700 flex-grow font-medium">${item.text}</div>
+                                <div class="flex space-x-2 shrink-0">
+                                    <button onclick="selectPart2Answer('${q.id}_${iIdx}', true)" 
+                                        class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${userVal === true ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}">
+                                        Đúng
+                                    </button>
+                                    <button onclick="selectPart2Answer('${q.id}_${iIdx}', false)" 
+                                        class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${userVal === false ? 'bg-rose-600 text-white border-rose-600 shadow' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}">
+                                        Sai
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="bg-navy-100 text-navy-800 text-xs font-bold px-2.5 py-1 rounded-lg">Câu ${idx + 1} (Phần II - Trắc nghiệm Đúng/Sai)</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 leading-relaxed">${q.question}</div>
+                        <div class="space-y-2 pt-1">${itemsHtml}</div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } else if (activePart === 3) {
+                currentExam.part3.forEach((q, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4";
+                    
+                    const savedVal = studentAnswers.part3[q.id] || '';
+                    const chars = savedVal.padEnd(4, ' ').split('').slice(0, 4);
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="bg-navy-100 text-navy-800 text-xs font-bold px-2.5 py-1 rounded-lg">Câu ${idx + 1} (Phần III - Trả lời ngắn)</span>
+                        </div>
+                        <div class="text-sm font-medium text-slate-800 leading-relaxed">${q.question}</div>
+                        
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center space-y-2">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase">Điền đáp án (Đúng 4 ô theo mẫu đáp án)</label>
+                            <div class="flex justify-center space-x-2" id="boxes-${q.id}">
+                                <input type="text" maxlength="1" value="${chars[0] !== ' ' ? chars[0] : ''}" oninput="handleShortInput('${q.id}', 0, this)" class="short-answer-input bg-white">
+                                <input type="text" maxlength="1" value="${chars[1] !== ' ' ? chars[1] : ''}" oninput="handleShortInput('${q.id}', 1, this)" class="short-answer-input bg-white">
+                                <input type="text" maxlength="1" value="${chars[2] !== ' ' ? chars[2] : ''}" oninput="handleShortInput('${q.id}', 2, this)" class="short-answer-input bg-white">
+                                <input type="text" maxlength="1" value="${chars[3] !== ' ' ? chars[3] : ''}" oninput="handleShortInput('${q.id}', 3, this)" class="short-answer-input bg-white">
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            renderMath();
+        }
+
+        function selectPart1Answer(qId, optionIdx) {
+            studentAnswers.part1[qId] = optionIdx;
+            renderCurrentPart();
+            updateProgress();
+        }
+
+        function selectPart2Answer(itemKey, boolVal) {
+            studentAnswers.part2[itemKey] = boolVal;
+            renderCurrentPart();
+            updateProgress();
+        }
+
+        function handleShortInput(qId, boxIndex, inputEl) {
+            const container = document.getElementById(`boxes-${qId}`);
+            const inputs = container.querySelectorAll('input');
+            
+            if (inputEl.value && boxIndex < 3) {
+                inputs[boxIndex + 1].focus();
+            }
+
+            let result = '';
+            inputs.forEach(inp => { result += inp.value; });
+            studentAnswers.part3[qId] = result.trim();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let totalQuestions = currentExam.part1.length + currentExam.part2.length + currentExam.part3.length;
+            let answered = 0;
+
+            answered += Object.keys(studentAnswers.part1).length;
+
+            currentExam.part2.forEach(q => {
+                let count = 0;
+                q.items.forEach((_, i) => {
+                    if (studentAnswers.part2[`${q.id}_${i}`] !== undefined) count++;
+                });
+                if (count === 4) answered++;
+            });
+
+            Object.values(studentAnswers.part3).forEach(v => {
+                if (v && v.length > 0) answered++;
+            });
+
+            document.getElementById('progress-text').innerText = `Đã làm: ${answered}/${totalQuestions} câu`;
+            const pct = (answered / totalQuestions) * 100;
+            document.getElementById('progress-bar-inner').style.width = `${pct}%`;
+        }
+
+        function navigateQuestion(direction) {
+            let nextPart = activePart + direction;
+            if (nextPart >= 1 && nextPart <= 3) {
+                switchExamPart(nextPart);
+            }
+        }
+
+        function confirmSubmitExam() {
+            showModalConfirm(
+                'Xác nhận nộp bài',
+                'Bạn có chắc chắn muốn nộp bài thi ngay bây giờ không?',
+                () => { submitExam(); }
+            );
+        }
+
+        // OFFICIAL THPT GRADING ALGORITHM
+        function submitExam() {
+            clearInterval(examTimerInterval);
+
+            let scoreP1 = 0;
+            let scoreP2 = 0;
+            let scoreP3 = 0;
+
+            // 1. Part I (0.25 pt per question)
+            currentExam.part1.forEach(q => {
+                if (studentAnswers.part1[q.id] === q.correctIndex) {
+                    scoreP1 += 0.25;
+                }
+            });
+
+            // 2. Part II (1 item=0.1, 2 items=0.25, 3 items=0.5, 4 items=1.0)
+            currentExam.part2.forEach(q => {
+                let correctCount = 0;
+                q.items.forEach((item, idx) => {
+                    const userVal = studentAnswers.part2[`${q.id}_${idx}`];
+                    if (userVal === item.correct) {
+                        correctCount++;
+                    }
+                });
+                if (correctCount === 1) scoreP2 += 0.1;
+                else if (correctCount === 2) scoreP2 += 0.25;
+                else if (correctCount === 3) scoreP2 += 0.5;
+                else if (correctCount === 4) scoreP2 += 1.0;
+            });
+
+            // 3. Part III (0.5 pt per question)
+            currentExam.part3.forEach(q => {
+                const userVal = (studentAnswers.part3[q.id] || '').replace(',', '.').trim();
+                const targetVal = q.correctAnswer.replace(',', '.').trim();
+                if (userVal === targetVal) {
+                    scoreP3 += 0.5;
+                }
+            });
+
+            const totalScore = Math.round((scoreP1 + scoreP2 + scoreP3) * 100) / 100;
+            const timeTakenSecs = ((currentExam.timeLimitMinutes * 60) - secondsRemaining);
+            const minsTaken = Math.max(1, Math.ceil(timeTakenSecs / 60));
+
+            // Save to Results Store
+            const resultEntry = {
+                studentName: currentStudentInfo.name,
+                className: currentStudentInfo.className,
+                examTitle: currentExam.title,
+                score: totalScore,
+                minsTaken: minsTaken,
+                timestamp: new Date().toLocaleString('vi-VN')
+            };
+            studentResultsDB.push(resultEntry);
+            saveDatabaseToStorage();
+
+            // Render Results Screen
+            document.getElementById('student-exam-screen').classList.add('hidden');
+            document.getElementById('student-result-screen').classList.remove('hidden');
+
+            document.getElementById('result-student-info').innerText = `Học sinh: ${currentStudentInfo.name} | Lớp: ${currentStudentInfo.className}`;
+            document.getElementById('result-score').innerText = `${totalScore.toFixed(2)} / 10.00`;
+            document.getElementById('result-detail-text').innerText = `Hoàn thành bài thi trong ${minsTaken} phút`;
+            
+            document.getElementById('score-p1').innerText = `${scoreP1.toFixed(2)} / 3.0`;
+            document.getElementById('score-p2').innerText = `${scoreP2.toFixed(2)} / 4.0`;
+            document.getElementById('score-p3').innerText = `${scoreP3.toFixed(2)} / 3.0`;
+
+            renderLeaderboard();
+            renderTeacherResultsTable();
+        }
+
+        // RENDER TOP 5 LEADERBOARD
+        function renderLeaderboard() {
+            const container = document.getElementById('top5-leaderboard-list');
+            container.innerHTML = '';
+
+            const sorted = [...studentResultsDB].sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.minsTaken - b.minsTaken;
+            }).slice(0, 5);
+
+            if (sorted.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-2">Chưa có kết quả nào được ghi nhận.</p>`;
+                return;
+            }
+
+            sorted.forEach((res, rank) => {
+                const item = document.createElement('div');
+                item.className = "py-2.5 flex items-center justify-between";
+                
+                let rankBadgeClass = "bg-slate-100 text-slate-600";
+                if (rank === 0) rankBadgeClass = "bg-amber-100 text-amber-700 font-bold";
+                if (rank === 1) rankBadgeClass = "bg-slate-200 text-slate-700 font-bold";
+                if (rank === 2) rankBadgeClass = "bg-orange-100 text-orange-700 font-bold";
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs ${rankBadgeClass}">
+                            ${rank + 1}
+                        </span>
+                        <div>
+                            <span class="font-bold text-slate-800 text-xs block">${res.studentName}</span>
+                            <span class="text-[10px] text-slate-400">${res.className} • ${res.minsTaken} phút</span>
+                        </div>
+                    </div>
+                    <span class="font-extrabold text-navy-700 text-sm">${res.score.toFixed(2)} điểm</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // EMBEDDED PDF SOLUTION VIEWER TOGGLE
+        function togglePdfSolutionView() {
+            const pdfContainer = document.getElementById('pdf-solution-viewer-container');
+            if (pdfContainer.classList.contains('hidden')) {
+                pdfContainer.classList.remove('hidden');
+
+                const pdfUrl = currentExam.pdfSolutionUrl || "Huong dan giai.pdf";
+                const iframe = document.getElementById('pdf-frame');
+                const downloadLink = document.getElementById('pdf-download-link');
+
+                iframe.src = pdfUrl;
+                downloadLink.href = pdfUrl;
+            } else {
+                pdfContainer.classList.add('hidden');
+            }
+        }
+
+        function resetToHome() {
+            document.getElementById('student-result-screen').classList.add('hidden');
+            document.getElementById('student-start-card').classList.remove('hidden');
+            document.getElementById('pdf-solution-viewer-container').classList.add('hidden');
+        }
+
+        // TEACHER ADMIN ACTIONS
+        function verifyTeacherLogin() {
+            const pass = document.getElementById('teacher-password-input').value;
+            if (pass === 'admin123' || pass === 'admin') {
+                document.getElementById('teacher-login-card').classList.add('hidden');
+                document.getElementById('teacher-panel').classList.remove('hidden');
+                document.getElementById('pdf-url-input').value = currentExam.pdfSolutionUrl || '';
+                document.getElementById('raw-json-input').value = JSON.stringify(currentExam, null, 2);
+                showModal('Đăng nhập thành công', 'Chào mừng Giáo viên đến với trang quản trị bài thi.');
+            } else {
+                showModal('Sai mật khẩu', 'Mật khẩu không chính xác. Mật khẩu mặc định là: admin123');
+            }
+        }
+
+        function renderTeacherExamsList() {
+            const container = document.getElementById('existing-exams-list');
+            container.innerHTML = '';
+
+            if (examsDatabase.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-3">Chưa có đề thi nào trong hệ thống.</p>`;
+                return;
+            }
+
+            examsDatabase.forEach((ex, idx) => {
+                const isActive = (ex.id === currentExam.id);
+                const item = document.createElement('div');
+                item.className = `py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${isActive ? 'bg-blue-50/60 p-3 rounded-xl border border-blue-100' : ''}`;
+                
+                item.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-800 text-xs">${idx + 1}. ${ex.title}</span>
+                            ${isActive ? '<span class="bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">KÍCH HOẠT</span>' : ''}
+                        </div>
+                        <span class="text-[10px] text-slate-400 block">PDF Lời giải: ${ex.pdfSolutionUrl ? ex.pdfSolutionUrl : 'Chưa đính kèm PDF'}</span>
+                    </div>
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <button onclick="setExamAsActive('${ex.id}')" class="px-3 py-1.5 ${isActive ? 'bg-navy-700 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} rounded-lg text-xs font-semibold transition-all">
+                            ${isActive ? 'Đang chọn' : 'Kích hoạt đề này'}
+                        </button>
+                        <button onclick="copySpecificExamLink('${ex.id}')" class="px-2.5 py-1.5 bg-blue-50 text-navy-700 border border-blue-200 rounded-lg text-xs font-semibold hover:bg-blue-100">
+                            <i class="fa-solid fa-link"></i> Link
+                        </button>
+                        <button onclick="deleteExam('${ex.id}')" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold hover:bg-rose-100">
+                            <i class="fa-solid fa-trash-can"></i> Xóa đề
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function setExamAsActive(id) {
+            currentExam = examsDatabase.find(e => e.id === id) || examsDatabase[0];
+            document.getElementById('current-exam-title').innerText = currentExam.title;
+            document.getElementById('new-exam-title').value = currentExam.title;
+            document.getElementById('pdf-url-input').value = currentExam.pdfSolutionUrl || '';
+            document.getElementById('raw-json-input').value = JSON.stringify(currentExam, null, 2);
+            renderExamSelector();
+            renderTeacherExamsList();
+            updateShareLink();
+            showModal('Đã kích hoạt đề thi', `Học sinh truy cập link sẽ tự động làm bài đề: "${currentExam.title}".`);
+        }
+
+        function copySpecificExamLink(id) {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const fullLink = `${baseUrl}?examId=${id}`;
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = fullLink;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showModal('Đã sao chép link!', `Đã chép link cố định cho đề thi này:\n${fullLink}`);
+        }
+
+        function deleteExam(id) {
+            if (examsDatabase.length <= 1) {
+                showModal('Không thể xóa', 'Hệ thống cần lưu lại ít nhất 01 đề thi.');
+                return;
+            }
+
+            showModalConfirm('Xác nhận xóa đề thi', 'Bạn có chắc chắn muốn xóa đề thi này không?', () => {
+                examsDatabase = examsDatabase.filter(e => e.id !== id);
+                saveDatabaseToStorage();
+                if (currentExam.id === id) {
+                    currentExam = examsDatabase[0];
+                }
+                renderTeacherExamsList();
+                renderExamSelector();
+                updateShareLink();
+                showModal('Đã xóa', 'Xóa đề thi thành công.');
+            });
+        }
+
+        function handlePdfFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const fileUrl = URL.createObjectURL(file);
+            document.getElementById('pdf-url-input').value = fileUrl;
+            showModal('Tải file thành công', `Đã nhận file PDF "${file.name}". Bấm "Lưu Đề Thi" để áp dụng.`);
+        }
+
+        function handleWordFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('word-filename-display').innerText = file.name;
+            showModal('Nạp Word', `Đã chọn file "${file.name}". Bạn có thể chỉnh sửa cấu trúc JSON trước khi lưu.`);
+        }
+
+        function loadExam2Template() {
+            document.getElementById('new-exam-title').value = EXAM_DE_SO_2.title;
+            document.getElementById('pdf-url-input').value = EXAM_DE_SO_2.pdfSolutionUrl;
+            document.getElementById('raw-json-input').value = JSON.stringify(EXAM_DE_SO_2, null, 2);
+        }
+
+        function clearForm() {
+            document.getElementById('new-exam-title').value = '';
+            document.getElementById('pdf-url-input').value = '';
+            document.getElementById('raw-json-input').value = '';
+            document.getElementById('word-filename-display').innerText = '';
+        }
+
+        function saveNewExam() {
+            const rawJson = document.getElementById('raw-json-input').value.trim();
+            const customTitle = document.getElementById('new-exam-title').value.trim();
+            const pdfUrl = document.getElementById('pdf-url-input').value.trim();
+
+            if (!rawJson) {
+                showModal('Thiếu dữ liệu', 'Vui lòng nhập cấu trúc dữ liệu đề thi.');
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(rawJson);
+                if (customTitle) parsed.title = customTitle;
+                if (pdfUrl) parsed.pdfSolutionUrl = pdfUrl;
+                if (!parsed.id) parsed.id = "exam_" + Date.now();
+
+                const existingIndex = examsDatabase.findIndex(e => e.id === parsed.id);
+                if (existingIndex >= 0) {
+                    examsDatabase[existingIndex] = parsed;
+                } else {
+                    examsDatabase.push(parsed);
+                }
+                currentExam = parsed;
+                saveDatabaseToStorage();
+
+                renderTeacherExamsList();
+                renderExamSelector();
+                updateShareLink();
+                showModal('Thành công', `Đã xuất bản và kích hoạt thành công đề thi "${parsed.title}"!`);
+            } catch (e) {
+                showModal('Lỗi định dạng JSON', 'Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra lại cấu trúc.');
+            }
+        }
+
+        function renderTeacherResultsTable() {
+            const tbody = document.getElementById('student-results-tbody');
+            tbody.innerHTML = '';
+
+            if (studentResultsDB.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-slate-400">Chưa có học sinh nộp bài.</td></tr>`;
+                return;
+            }
+
+            studentResultsDB.slice().reverse().forEach(res => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold text-slate-800">${res.studentName}</td>
+                    <td class="p-2.5">${res.className}</td>
+                    <td class="p-2.5 truncate max-w-[150px]">${res.examTitle}</td>
+                    <td class="p-2.5 text-center font-bold text-navy-700">${res.score.toFixed(2)}</td>
+                    <td class="p-2.5 text-center">${res.minsTaken} phút</td>
+                    <td class="p-2.5 text-right text-[10px] text-slate-400">${res.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearAllResults() {
+            showModalConfirm('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa tất cả kết quả học sinh?', () => {
+                studentResultsDB = [];
+                saveDatabaseToStorage();
+                renderTeacherResultsTable();
+                renderLeaderboard();
+            });
+        }
+
+        // UTILITIES & KATEX MATH RENDERING
+        function showModal(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-buttons').innerHTML = `
+                <button onclick="closeModal()" class="px-5 py-2 bg-navy-700 text-white font-bold rounded-xl text-xs">Đóng</button>
+            `;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function showModalConfirm(title, message, onConfirm) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-buttons').innerHTML = `
+                <button id="confirm-yes-btn" class="px-4 py-2 bg-red-600 text-white font-bold rounded-xl text-xs">Đồng ý</button>
+                <button onclick="closeModal()" class="px-4 py-2 border border-slate-300 text-slate-700 font-bold rounded-xl text-xs">Hủy</button>
+            `;
+            document.getElementById('confirm-yes-btn').onclick = () => {
+                closeModal();
+                onConfirm();
+            };
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function renderMath() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+    </script>
+</body>
+</html>
